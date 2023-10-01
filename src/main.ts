@@ -6,10 +6,9 @@ import * as compression from 'compression';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('Pictohub API')
+    .setDescription('Pictohub API lets you access data from the Pictohub database. The pictohub database provides you all the ARASAAC pictograms and their translations in different languages with more examples and information.')
     .setVersion('1.0')
-    .addTag('cats')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
