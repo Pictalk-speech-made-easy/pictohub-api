@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseModule } from 'database.module';
+import { DatabaseModule } from './database.module';
 import { ThrottlerModule, seconds, days } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 
