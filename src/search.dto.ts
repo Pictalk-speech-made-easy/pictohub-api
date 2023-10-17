@@ -25,4 +25,9 @@ export class SearchParameterDto {
     @Min(1)
     @Max(5)
     limit: number = 1;
+    
+    @ApiProperty()
+    @IsOptional()
+    @IsString({each: true})
+    lang: string[];
 }

@@ -20,10 +20,17 @@ export class AppService {
       } else {
         path = searchParameterDto.path;
       }
-      const lang = path[0].split('.')[1];
-      const indexOfLang = lang_array.indexOf('keywords.' + lang);
-      if (indexOfLang !== -1) {
-        lang_array.splice(indexOfLang, 1);
+      if (!searchParameterDto.lang || searchParameterDto.lang.length === 0) {
+        const lang = path[0].split('.')[1];
+        const indexOfLang = lang_array.indexOf('keywords.' + lang);
+        if (indexOfLang !== -1) {
+          lang_array.splice(indexOfLang, 1);
+        }
+      } else {
+        lang_array = lang_array.filter((lang) => {
+          // Regex has to match \.LANG for each lang
+          return !lang.match(new RegExp("\\." + searchParameterDto.lang.join("|\\.")));
+        });
       }
       const result = await this.db.collection('pictohub').aggregate([
         {
@@ -64,10 +71,18 @@ export class AppService {
       } else {
         path = searchParameterDto.path;
       }
-      const lang = path[0].split('.')[1];
-      const indexOfLang = lang_array.indexOf('keywords.' + lang);
-      if (indexOfLang !== -1) {
-        lang_array.splice(indexOfLang, 1);
+      console.log(searchParameterDto.lang)
+      if (!searchParameterDto.lang || searchParameterDto.lang.length === 0) {
+        const lang = path[0].split('.')[1];
+        const indexOfLang = lang_array.indexOf('keywords.' + lang);
+        if (indexOfLang !== -1) {
+          lang_array.splice(indexOfLang, 1);
+        }
+      } else {
+        lang_array = lang_array.filter((lang) => {
+          // Regex has to match \.LANG for each lang
+          return !lang.match(new RegExp("\\." + searchParameterDto.lang.join("|\\.")));
+        });
       }
       const result = await this.db.collection('pictohub').aggregate([
         {
