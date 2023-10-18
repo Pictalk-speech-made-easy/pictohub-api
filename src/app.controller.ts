@@ -21,4 +21,5 @@ export class AppController {
   async searchKeyword(@Query(new ValidationPipe({ transform: true })) searchParametersDto: SearchParameterDto): Promise<any> {
     return this.appService.searchKeyword(searchParametersDto);
   }
+
 }

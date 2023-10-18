@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsBoolean, IsBooleanString, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, Max, Min, ValidateIf } from 'class-validator';
 
 export class SearchParameterDto {
     @ApiProperty()
@@ -30,4 +30,9 @@ export class SearchParameterDto {
     @IsOptional()
     @IsString({each: true})
     lang: string[];
+
+    @ApiProperty()
+    @IsOptional()
+    @IsBooleanString()
+    completeIfEmpty?: boolean;
 }
