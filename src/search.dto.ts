@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsBoolean, IsBooleanString, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, Max, Min, ValidateIf } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { ArrayMinSize, IsBoolean, IsBooleanString, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, Max, Min, ValidateIf } from 'class-validator';
 
 export class SearchParameterDto {
     @ApiProperty()
@@ -10,6 +10,14 @@ export class SearchParameterDto {
     
     @ApiProperty()
     @IsNotEmpty()
+    @Transform((value) => {
+        if (typeof value.value === 'string') {
+          return [value.value];
+        } else if (Array.isArray(value.value)) {
+          return value.value.map((v) => String(v));
+        }
+        return value.value;
+      })
     @IsString({each: true})
     path: string[];
 
@@ -28,7 +36,16 @@ export class SearchParameterDto {
     
     @ApiProperty()
     @IsOptional()
+    @Transform((value) => {
+        if (typeof value.value === 'string') {
+          return [value.value];
+        } else if (Array.isArray(value.value)) {
+          return value.value.map((v) => String(v));
+        }
+        return value.value;
+      })
     @IsString({each: true})
+    @ArrayMinSize(1)
     lang: string[];
 
     @ApiProperty()
