@@ -25,7 +25,19 @@ export class AppService {
               "index": searchParameterDto.index,
               "compound": {
                 "should": [
-                    {
+                  {
+                    "text": {
+                        "query": searchParameterDto.term,
+                        "path": priorizedPath,
+                        "score": {
+                          "boost": {
+                              "value": 5  // Higher value means higher priority
+                          }
+                        }
+                        // Default boost value is 1
+                    },
+                  },
+                  {
                       "text": {
                           "query": searchParameterDto.term,
                           "path": searchParameterDto.path,
