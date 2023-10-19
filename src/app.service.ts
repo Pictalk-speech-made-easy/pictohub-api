@@ -14,19 +14,29 @@ export class AppService {
     try {
       const lang_array = this.filterLanguage(searchParameterDto);
       let priorizedPath = undefined;
-      let otherPath = undefined;
       if (searchParameterDto.path.filter((p) => p.includes('.keyword')).length > 0) {
         priorizedPath = searchParameterDto.path.filter((p) => p.includes('.keyword')); // We will prioritize the keyword field
-        otherPath = searchParameterDto.path.filter((p) => !p.includes('.keyword'));
       }
       let result = [];
-      if (priorizedPath.length > 0 && otherPath.length > 0) {
+      if (priorizedPath.length > 0) {
         result = await this.db.collection('pictohub').aggregate([
           {
             "$search": {
               "index": searchParameterDto.index,
               "compound": {
                 "should": [
+                    {
+                      "text": {
+                          "query": searchParameterDto.term,
+                          "path": searchParameterDto.path,
+                          "score": {
+                            "boost": {
+                                "value": 2  // Higher value means higher priority
+                            }
+                          }
+                          // Default boost value is 1
+                      },
+                  },
                     {
                       "moreLikeThis": {
                         "like": priorizedPath.map((pa: string) => {
@@ -36,17 +46,10 @@ export class AppService {
                         }),
                         "score": {
                           "boost": {
-                              "value": 5  // Higher value means higher priority
+                              "value": 1  // Higher value means higher priority
                           }
-                      }
-                      },
-                    },
-                    {
-                        "text": {
-                            "query": searchParameterDto.term,
-                            "path": otherPath
-                            // Default boost value is 1
                         }
+                      },
                     }
                 ]
             }
@@ -55,6 +58,14 @@ export class AppService {
           {
             "$limit": searchParameterDto.limit
           },
+          //Add the score field
+          {
+            "$addFields": {
+                "score": {
+                    "$meta": "searchScore"
+                }
+            },
+          },
           // The field format is: keywords.LANG
           // We will unset all the LANG != search language
           {
@@ -62,6 +73,7 @@ export class AppService {
           }
       ],
       ).toArray();
+
       } else {
         result = await this.db.collection('pictohub').aggregate([
           {
@@ -73,11 +85,23 @@ export class AppService {
                   obj[pa] = searchParameterDto.term;
                   return obj;
                 }),
+                "score": {
+                  "boost": {
+                      "value": 2  // Higher value means higher priority
+                  }
+                }
               },
             },
           },
           {
             "$limit": searchParameterDto.limit
+          },
+          {
+            "$addFields": {
+                "score": {
+                    "$meta": "searchScore"
+                }
+            },
           },
           // The field format is: keywords.LANG
           // We will unset all the LANG != search language
@@ -87,8 +111,7 @@ export class AppService {
       ],
       ).toArray();
       }
-      
-      
+      console.log(`Normal exact search returned ${result.length} results`);
     if (result.length === 0 && searchParameterDto.completeIfEmpty) {
       result = await this.db.collection('pictohub').aggregate([
         {
@@ -103,11 +126,11 @@ export class AppService {
         },
         {
           "$addFields": {
-              "highlights": {
-                  "$meta": "searchHighlights"
+              "score": {
+                  "$meta": "searchScore"
               }
-          }
-      },
+          },
+        },
       {
         "$limit": searchParameterDto.limit
       },
