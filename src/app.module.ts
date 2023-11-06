@@ -1,23 +1,25 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { DatabaseModule } from './database.module';
-import { ThrottlerModule, seconds, days } from '@nestjs/throttler';
+import { ThrottlerModule, days, seconds } from '@nestjs/throttler';
+import { PictohubModule } from './pictohub/pictohub.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { Module } from '@nestjs/common';
+import { PictalkModule } from './pictalk/pictalk.module';
 
 @Module({
   imports: [
-    DatabaseModule, 
-    ThrottlerModule.forRoot([{
-      ttl: seconds(60),
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: seconds(60),
+        limit: 100,
+      },
+    ]),
     CacheModule.register({
       ttl: days(5),
       max: 10000,
-    })
+      isGlobal: true,
+    }),
+
+    PictohubModule,
+    PictalkModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
