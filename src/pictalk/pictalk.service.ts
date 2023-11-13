@@ -32,8 +32,8 @@ export class PictalkService {
           `Found a corresponding pictalk user id ${pictalkUser.id} for ${user.email}`,
         );
         userFilter.push(
-          { term: { public_collection_userId: pictalkUser.id } },
-          { term: { public_picto_userId: pictalkUser.id } },
+          { term: { public_collection_userid: pictalkUser.id } },
+          { term: { public_picto_userid: pictalkUser.id } },
         );
       } else {
         userFilter.push(
@@ -55,8 +55,15 @@ export class PictalkService {
                 type: 'best_fields',
               },
             },
-            should: userFilter,
-            minimum_should_match: 1,
+            filter: [
+              // Adding the user ID filter in a filter context
+              {
+                bool: {
+                  should: userFilter,
+                  minimum_should_match: 1,
+                },
+              },
+            ],
           },
         },
       },

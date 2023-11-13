@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, Matches } from 'class-validator';
 import { SearchParameterDto } from 'src/pictohub/search.dto';
 
 // Search Dto for Pictalk
@@ -17,14 +17,11 @@ export class PictalkSearchDto extends SearchParameterDto {
     return value.value;
   })
   @IsString({ each: true })
-  @IsIn(
-    [
-      'public_collection_meaning',
-      'public_collection_speech',
-      'public_picto_meaning',
-      'public_picto_speech',
-    ],
-    { each: true },
+  @Matches(
+    /^(public_collection_meaning|public_collection_speech|public_picto_meaning|public_picto_speech)\.[a-z]{2}$/,
+    {
+      each: true,
+    },
   )
   path: string[];
 }
