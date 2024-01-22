@@ -8,5 +8,5 @@ export default (): TypeOrmModuleOptions => ({
   password: process.env.DB_PWD || 'postgres',
   database: process.env.DB_NAME || 'pictalk',
   entities: [__dirname + '/../**/*.entity.{js,ts}'],
-  synchronize: Boolean(process.env.TYPEORM_SYNC) || true,
+  synchronize: process.env.TYPEORM_SYNC === 'true',
 });
