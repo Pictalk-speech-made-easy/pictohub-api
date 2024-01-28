@@ -64,4 +64,9 @@ export class SearchParameterDto {
   @IsOptional()
   @IsBooleanString()
   completeIfEmpty?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBooleanString()
+  pictalk?: boolean;
 }
