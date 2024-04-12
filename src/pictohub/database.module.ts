@@ -12,7 +12,7 @@ import { ConfigModule } from '@nestjs/config';
           const client = await MongoClient.connect(
             `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_URL}/?retryWrites=true&w=majority`,
           );
-          return client.db('pictohub');
+          return client.db('pictohub-v2');
         } catch (e) {
           throw e;
         }
