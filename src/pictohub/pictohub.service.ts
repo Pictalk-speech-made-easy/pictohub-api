@@ -15,16 +15,16 @@ export class PictohubService {
       const lang_array = this.filterLanguage(searchParameterDto);
       let priorizedPath = undefined;
       if (
-        searchParameterDto.path.filter((p) => p.includes('.keyword')).length > 0
+        searchParameterDto.path.filter((p) => p.includes('.word')).length > 0
       ) {
         priorizedPath = searchParameterDto.path.filter((p) =>
-          p.includes('.keyword'),
+          p.includes('.word'),
         ); // We will prioritize the keyword field
       }
       let result = [];
       if (priorizedPath.length > 0) {
         result = await this.db
-          .collection('pictohub')
+          .collection('pictograms')
           .aggregate([
             {
               $search: {
@@ -84,7 +84,7 @@ export class PictohubService {
                 },
               },
             },
-            // The field format is: keywords.LANG
+            // The field format is: translations.LANG
             // We will unset all the LANG != search language
             {
               $unset: lang_array,
@@ -93,7 +93,7 @@ export class PictohubService {
           .toArray();
       } else {
         result = await this.db
-          .collection('pictohub')
+          .collection('pictograms')
           .aggregate([
             {
               $search: {
@@ -122,7 +122,7 @@ export class PictohubService {
                 },
               },
             },
-            // The field format is: keywords.LANG
+            // The field format is: translations.LANG
             // We will unset all the LANG != search language
             {
               $unset: lang_array,
@@ -133,7 +133,7 @@ export class PictohubService {
       console.log(`Normal exact search returned ${result.length} results`);
       if (result.length === 0 && searchParameterDto.completeIfEmpty) {
         result = await this.db
-          .collection('pictohub')
+          .collection('pictograms')
           .aggregate([
             {
               $search: {
@@ -154,7 +154,7 @@ export class PictohubService {
             {
               $limit: searchParameterDto.limit,
             },
-            // The field format is: keywords.LANG
+            // The field format is: translations.LANG
             // We will unset all the LANG != search language
             {
               $unset: lang_array,
@@ -173,49 +173,50 @@ export class PictohubService {
 
   filterLanguage(searchParameterDto: SearchParameterDto): string[] {
     let lang_array = [
-      'keywords.an',
-      'keywords.ar',
-      'keywords.en',
-      'keywords.es',
-      'keywords.fr',
-      'keywords.it',
-      'keywords.nl',
-      'keywords.pl',
-      'keywords.pt',
-      'keywords.ru',
-      'keywords.tr',
-      'keywords.zh',
-      'keywords.bg',
-      'keywords.br',
-      'keywords.ca',
-      'keywords.de',
-      'keywords.el',
-      'keywords.fa',
-      'keywords.gl',
-      'keywords.he',
-      'keywords.hr',
-      'keywords.hu',
-      'keywords.ko',
-      'keywords.lt',
-      'keywords.lv',
-      'keywords.mk',
-      'keywords.nb',
-      'keywords.ro',
-      'keywords.sk',
-      'keywords.sq',
-      'keywords.sv',
-      'keywords.sr',
-      'keywords.val',
-      'keywords.uk',
-      'keywords.et',
-      'keywords.eu',
+      'translations.an',
+      'translations.ar',
+      'translations.en',
+      'translations.es',
+      'translations.fr',
+      'translations.it',
+      'translations.nl',
+      'translations.pl',
+      'translations.pt',
+      'translations.ru',
+      'translations.tr',
+      'translations.zh',
+      'translations.bg',
+      'translations.br',
+      'translations.ca',
+      'translations.de',
+      'translations.el',
+      'translations.fa',
+      'translations.gl',
+      'translations.he',
+      'translations.hr',
+      'translations.hu',
+      'translations.ko',
+      'translations.lt',
+      'translations.lv',
+      'translations.mk',
+      'translations.nb',
+      'translations.ro',
+      'translations.sk',
+      'translations.sq',
+      'translations.sv',
+      'translations.sr',
+      'translations.val',
+      'translations.uk',
+      'translations.et',
+      'translations.eu',
     ];
     if (!searchParameterDto.lang || searchParameterDto.lang.length === 0) {
       const lang = searchParameterDto.path[0].split('.')[1];
-      const indexOfLang = lang_array.indexOf('keywords.' + lang);
+      const indexOfLang = lang_array.indexOf('translations.' + lang);
       if (indexOfLang !== -1) {
         lang_array.splice(indexOfLang, 1);
       }
+      lang_array.push('translations.fr.lvf_entries');
       return lang_array;
     } else {
       lang_array = lang_array.filter((lang) => {
@@ -224,6 +225,7 @@ export class PictohubService {
           new RegExp('\\.' + searchParameterDto.lang.join('|\\.')),
         );
       });
+      lang_array.push('translations.fr.lvf_entries');
       return lang_array;
     }
   }
