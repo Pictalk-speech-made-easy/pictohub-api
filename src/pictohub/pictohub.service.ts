@@ -7,7 +7,7 @@ export class PictohubService {
   constructor(
     @Inject('DATABASE_CONNECTION')
     private db: Db,
-  ) {}
+  ) { }
   private readonly logger = new Logger(PictohubService.name);
 
   async searchKeyword(searchParameterDto: SearchParameterDto): Promise<any> {
@@ -32,28 +32,30 @@ export class PictohubService {
                 compound: {
                   should: [
                     {
-                      text: {
+                      autocomplete: {
                         query: searchParameterDto.term,
-                        path: priorizedPath,
+                        path: priorizedPath[0],
                         score: {
                           boost: {
-                            value: 5, // Higher value means higher priority
-                          },
-                        },
-                        // Default boost value is 1
-                      },
+                            value: 2
+                          }
+                        }
+                      }
                     },
                     {
                       text: {
                         query: searchParameterDto.term,
-                        path: searchParameterDto.path,
+                        path: priorizedPath,
+                        fuzzy: {
+                          maxEdits: 1,
+                          prefixLength: 3
+                        },
                         score: {
                           boost: {
-                            value: 2, // Higher value means higher priority
-                          },
-                        },
-                        // Default boost value is 1
-                      },
+                            value: 1
+                          }
+                        }
+                      }
                     },
                     {
                       moreLikeThis: {
@@ -70,27 +72,92 @@ export class PictohubService {
                       },
                     },
                   ],
-                },
-              },
+                  minimumShouldMatch: 1
+                }
+              }
+            },
+            {
+              $addFields: {
+                searchScore: { $meta: "searchScore" }
+              }
+            },
+            {
+              $unwind: {
+                path: "$translations.fr",
+                includeArrayIndex: "arrayIndex"
+              }
+            },
+            {
+              $addFields: {
+                wordLength: { $strLenCP: `$${searchParameterDto.path}` },
+                lengthDifference: { $abs: { $subtract: [searchParameterDto.term.length, { $strLenCP: "$translations.fr.word" }] } }
+              }
+            },
+            {
+              $addFields: {
+                score: {
+                  $multiply: [
+                    { $divide: [1, { $add: ["$lengthDifference", 1] }] },
+                    "$searchScore"
+                  ]
+                }
+              }
+            },
+
+            {
+              $sort: {
+                score: -1
+              }
+            },
+            {
+              $group: {
+                _id: "$_id",
+                originalDoc: { $first: "$$ROOT" },
+                translations: { $push: "$translations.fr" },
+                bestMatchWord: { $first: "$translations.fr.word" },
+                bestScore: { $first: "$score" },
+                bestWordIndex: { $first: "$arrayIndex" }
+              }
+            },
+            {
+              $addFields: {
+                "originalDoc.translations.fr": "$translations",
+                "originalDoc.bestMatchWord": "$bestMatchWord",
+                "originalDoc.bestScore": "$bestScore",
+                "originalDoc.bestWordIndex": "$bestWordIndex"
+              }
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$originalDoc"
+              }
+            },
+            {
+              $sort: {
+                bestWordIndex: 1,
+                score: -1
+              }
+            },
+            {
+              $project: {
+                searchScore: 0,
+                wordLength: 0,
+                lengthDifference: 0,
+                score: 0,
+                arrayIndex: 0,
+              }
             },
             {
               $limit: searchParameterDto.limit,
             },
-            //Add the score field
-            {
-              $addFields: {
-                score: {
-                  $meta: 'searchScore',
-                },
-              },
-            },
-            // The field format is: translations.LANG
-            // We will unset all the LANG != search language
-            {
-              $unset: lang_array,
-            },
-          ])
+          ]
+          )
           .toArray();
+          result.sort((a, b) => {
+            const diffA = calculateCharacterDifferences(a.bestMatchWord, searchParameterDto.term);
+            const diffB = calculateCharacterDifferences(b.bestMatchWord, searchParameterDto.term);
+            return diffA - diffB;
+          });
       } else {
         result = await this.db
           .collection('pictograms')
@@ -229,4 +296,17 @@ export class PictohubService {
       return lang_array;
     }
   }
+}
+
+function calculateCharacterDifferences(str1: string, str2: string): number {
+  const length = Math.max(str1.length, str2.length);
+  let differences = 0;
+
+  for (let i = 0; i < length; i++) {
+    if (str1[i] !== str2[i]) {
+      differences++;
+    }
+  }
+
+  return differences;
 }
