@@ -22,7 +22,10 @@ export class PictohubService {
         ); // We will prioritize the keyword field
       }
       let result = [];
-      if (priorizedPath.length > 0) {
+      if (priorizedPath && priorizedPath.length > 0) {
+        const lang = priorizedPath[0].split('.')[1]; // CHANGE IT
+        const addFieldsProperty = `originalDoc.translations.${lang}`
+        console.log(lang)
         result = await this.db
           .collection('pictograms')
           .aggregate([
@@ -83,14 +86,14 @@ export class PictohubService {
             },
             {
               $unwind: {
-                path: "$translations.fr",
+                path: `$translations.${lang}`,
                 includeArrayIndex: "arrayIndex"
               }
             },
             {
               $addFields: {
-                wordLength: { $strLenCP: `$${searchParameterDto.path}` },
-                lengthDifference: { $abs: { $subtract: [searchParameterDto.term.length, { $strLenCP: "$translations.fr.word" }] } }
+                wordLength: { $strLenCP: `$${priorizedPath[0]}` },
+                lengthDifference: { $abs: { $subtract: [searchParameterDto.term.length, { $strLenCP: `$${priorizedPath[0]}` }] } }
               }
             },
             {
@@ -113,15 +116,15 @@ export class PictohubService {
               $group: {
                 _id: "$_id",
                 originalDoc: { $first: "$$ROOT" },
-                translations: { $push: "$translations.fr" },
-                bestMatchWord: { $first: "$translations.fr.word" },
+                translations: { $push: `$translations.${lang}` },
+                bestMatchWord: { $first: `$${priorizedPath[0]}` },
                 bestScore: { $first: "$score" },
                 bestWordIndex: { $first: "$arrayIndex" }
               }
             },
             {
               $addFields: {
-                "originalDoc.translations.fr": "$translations",
+                addFieldsProperty: "$translations",
                 "originalDoc.bestMatchWord": "$bestMatchWord",
                 "originalDoc.bestScore": "$bestScore",
                 "originalDoc.bestWordIndex": "$bestWordIndex"
