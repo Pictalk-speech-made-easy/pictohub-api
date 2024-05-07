@@ -1,18 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
-  ArrayMinSize,
-  IsBoolean,
-  IsBooleanString,
+  IsIn,
   IsNotEmpty,
   IsNumber,
-  IsNumberString,
   IsOptional,
   IsString,
   Max,
   Min,
-  ValidateIf,
 } from 'class-validator';
+import { locales } from 'src/utils/locales';
 
 export class SearchParameterDto {
   @ApiProperty()
@@ -22,6 +19,12 @@ export class SearchParameterDto {
 
   @ApiProperty()
   @IsNotEmpty()
+  @IsString()
+  @IsIn(locales)
+  locale: string;
+
+  @ApiProperty()
+  @IsOptional()
   @Transform((value) => {
     if (typeof value.value === 'string') {
       return [value.value];
@@ -31,20 +34,21 @@ export class SearchParameterDto {
     return value.value;
   })
   @IsString({ each: true })
-  path: string[];
+  path: string[] = [];
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  index: string;
+  @IsIn(['search', 'default', 'keyword'])
+  index: string = 'search';
 
   @Type(() => Number)
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  @Min(1)
-  @Max(5)
-  limit = 1;
+  @Min(4)
+  @Max(32)
+  limit: number = 8;
 
   @ApiProperty()
   @IsOptional()
@@ -57,11 +61,5 @@ export class SearchParameterDto {
     return value.value;
   })
   @IsString({ each: true })
-  @ArrayMinSize(1)
-  lang: string[];
-
-  @ApiProperty()
-  @IsOptional()
-  @IsBooleanString()
-  completeIfEmpty?: boolean;
+  languages: string[] = [];
 }
