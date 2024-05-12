@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsIn,
   IsNotEmpty,
   IsNumber,
@@ -62,4 +63,9 @@ export class SearchParameterDto {
   })
   @IsString({ each: true })
   languages: string[] = [];
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  expanded: boolean = false;
 }
