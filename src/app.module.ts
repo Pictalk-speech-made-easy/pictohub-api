@@ -4,7 +4,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { PictalkModule } from './pictalk/pictalk.module';
 import { SentryModule } from '@ntegral/nestjs-sentry';
-
+import * as Sentry from '@sentry/node';
+import { Integration } from '@sentry/types';
 @Module({
   imports: [
     ThrottlerModule.forRoot([
@@ -21,7 +22,10 @@ import { SentryModule } from '@ntegral/nestjs-sentry';
     SentryModule.forRoot({
       dsn: 'https://f6a20c9301bdf98c3caa9b33c415bf3f@o1135783.ingest.us.sentry.io/4507248851812352',
       environment: process.env.NODE_ENV,
-      logLevels: ['debug']
+      logLevels: ['debug'],
+      integrations: [
+        new Sentry.Integrations.Http({ tracing: true })
+      ] as unknown as Integration[],
     }),
     PictohubModule,
     PictalkModule,

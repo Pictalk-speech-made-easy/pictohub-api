@@ -3,6 +3,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import { AppModule } from './app.module';
+import * as Sentry from '@sentry/node';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = new DocumentBuilder()
@@ -19,6 +21,7 @@ async function bootstrap() {
   app.enableCors();
   app.use(compression());
   app.use(helmet());
+  app.use(Sentry.Handlers.tracingHandler());
   await app.listen(3001);
 }
 bootstrap();
